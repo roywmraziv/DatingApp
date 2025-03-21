@@ -3,7 +3,7 @@ import { Router, RouterLink } from '@angular/router';
 
 @Component({
   selector: 'app-server-error',
-  imports: [RouterLink],
+  imports: [],
   templateUrl: './server-error.component.html',
   styleUrl: './server-error.component.css'
 })
