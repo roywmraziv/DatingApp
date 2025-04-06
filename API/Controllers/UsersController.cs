@@ -31,9 +31,9 @@ public class UsersController (IUnitOfWork unitOfWork, IMapper mapper, IPhotoServ
     {
         var user = await unitOfWork.UserRepository.GetMemberAsync(username);
 
-        if(user == null) return NotFound();
+        if (user == null) return NotFound();
 
-        return user;
+        return user; // Ensure Photos collection is included in the response
     }
 
     [HttpPut]
@@ -55,27 +55,29 @@ public class UsersController (IUnitOfWork unitOfWork, IMapper mapper, IPhotoServ
     {
         var user = await unitOfWork.UserRepository.GetUserByUsernameAsync(User.GetUsername());
 
-        if(user == null) return BadRequest("User not found");
+        if (user == null) return BadRequest("User not found");
 
         var result = await photoService.AddPhotoAsync(file);
 
-        if(result.Error != null) return BadRequest(result.Error.Message);
+        // Log the result for debugging
+        Console.WriteLine($"Photo Upload Result: SecureUrl={result.SecureUrl}, PublicId={result.PublicId}");
+
+        if (result.Error != null) return BadRequest(result.Error.Message);
 
         var photo = new Photo
         {
-            Url = result.SecureUrl.AbsoluteUri,
+            Url = result.SecureUrl?.AbsoluteUri, // Ensure SecureUrl is used correctly
             PublicId = result.PublicId
         };
 
-        if(user.Photos.Count == 0) photo.IsMain = true;
+        if (user.Photos.Count == 0) photo.IsMain = true;
 
         user.Photos.Add(photo);
 
-        if(await unitOfWork.Complete()) 
-            return CreatedAtAction(nameof(GetUser), new {username = user.UserName}, mapper.Map<PhotoDto>(photo));
+        if (await unitOfWork.Complete())
+            return CreatedAtAction(nameof(GetUser), new { username = user.UserName }, mapper.Map<PhotoDto>(photo));
 
         return BadRequest("Problem adding photo");
-        
     }
 
     [HttpPut("set-main-photo/{photoId:int}")]
@@ -123,6 +125,23 @@ public class UsersController (IUnitOfWork unitOfWork, IMapper mapper, IPhotoServ
         if(await unitOfWork.Complete()) return Ok();
 
         return BadRequest("Problem deleting photo");
+    }
+
+    [HttpGet("get-user-photos")]
+    public async Task<ActionResult<IEnumerable<PhotoDto>>> GetUserPhotos()
+    {
+        var user = await unitOfWork.UserRepository.GetUserByUsernameAsync(User.GetUsername());
+
+        if(user == null) return BadRequest("User not found");
+
+        var photos = user.Photos.Select(photo => new PhotoDto
+        {
+            Id = photo.Id,
+            PhotoUrl = photo.Url,
+            IsMain = photo.IsMain
+        }).ToList();
+
+        return Ok(photos);
     }
 
 }

@@ -13,8 +13,12 @@ public class AutoMapperProfiles : Profile
         CreateMap<AppUser, MemberDto>()
             .ForMember(d => d.Age, o => o.MapFrom(s => s.DateOfBirth.CalculateAge()))
             .ForMember(d => d.PhotoUrl, o => 
-                o.MapFrom(s => s.Photos.FirstOrDefault(x => x.IsMain)!.Url));
-        CreateMap<Photo, PhotoDto>();
+                o.MapFrom(s => s.Photos.FirstOrDefault(x => x.IsMain)!.Url))
+            .ForMember(d => d.Photos, o => 
+                o.MapFrom(s => s.Photos)) // Ensure Photos collection is mapped
+            .AfterMap((src, dest) => Console.WriteLine($"Mapped MemberDto: {dest}")); // Debugging: Log the mapped MemberDto
+        CreateMap<Photo, PhotoDto>()
+            .ForMember(d => d.PhotoUrl, o => o.MapFrom(s => s.Url)); // Explicitly map Url to PhotoUrl
         CreateMap<MemberUpdateDto, AppUser>();
         CreateMap<RegisterDto, AppUser>();
         CreateMap<string, DateOnly>().ConvertUsing(s => DateOnly.Parse(s));

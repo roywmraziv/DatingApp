@@ -13,10 +13,13 @@ public class UserRepository(DataContext context, IMapper mapper) : IUserReposito
 {
     public async Task<MemberDto?> GetMemberAsync(string username)
     {
-        return await context.Users
+        var member = await context.Users
             .Where(x => x.UserName == username)
             .ProjectTo<MemberDto>(mapper.ConfigurationProvider)
             .SingleOrDefaultAsync();
+
+        Console.WriteLine($"Fetched MemberDto: {member}"); // Debugging: Log the fetched MemberDto
+        return member;
     }
 
     public async Task<PagedList<MemberDto>> GetMembersAsync(UserParams userParams)

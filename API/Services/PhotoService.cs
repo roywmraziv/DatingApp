@@ -29,6 +29,10 @@ public class PhotoService : IPhotoService
             };
             uploadResult = await _cloudinary.UploadAsync(uploadParams);
         }
+
+        // Log the upload result for debugging
+        Console.WriteLine($"Cloudinary Upload Result: SecureUrl={uploadResult.SecureUrl}, PublicId={uploadResult.PublicId}");
+
         return uploadResult;
     }
 

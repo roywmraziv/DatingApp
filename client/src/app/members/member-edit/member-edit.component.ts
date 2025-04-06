@@ -23,6 +23,7 @@ export class MemberEditComponent implements OnInit{
     }
   }
   member?: Member;
+  photos: any[] = [];
   private accountService = inject(AccountService);
   private memberService = inject(MembersService);
   private toastr = inject(ToastrService);
@@ -31,12 +32,15 @@ export class MemberEditComponent implements OnInit{
     this.loadMember();
   }
 
-  loadMember(){
+  loadMember() {
     const user = this.accountService.currentUser();
-    if(!user) return;
+    if (!user) return;
     this.memberService.getMember(user.username).subscribe({
-      next: member => this.member = member
-    })
+      next: member => {
+        this.member = member;
+        this.photos = this.member.photos || []; // Ensure photos are loaded
+      }
+    });
   }
 
   updateMember(){

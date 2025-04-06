@@ -24,6 +24,7 @@ export class MemberDetailComponent implements OnInit, OnDestroy {
   presenceService = inject(PresenceService);
   private messageService = inject(MessageService);
   private accountService = inject(AccountService);
+  
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   member: Member = {} as Member;
@@ -34,24 +35,24 @@ export class MemberDetailComponent implements OnInit, OnDestroy {
     this.route.data.subscribe({
       next: data => {
         this.member = data['member'];
+        console.log('Member data:', this.member); // Debugging: Log the member data
 
-        this.member && this.member.photos.map(p => {
-          this.images.push(
-            new ImageItem({src: p.photoUrl, thumb: p.photoUrl})
-          )
-        })
+        // Map photos to the images array as ImageItem instances
+        this.images = this.member.photos?.map(photo => 
+          new ImageItem({ src: photo.photoUrl, thumb: photo.photoUrl })
+        ) || [];
       }
-    })
+    });
 
     this.route.paramMap.subscribe({
       next: _ => this.onRouteParamsChange()
-    })
+    });
 
     this.route.queryParams.subscribe({
       next: params => {
         params['tab'] && this.selectTab(params['tab']);
       }
-    })
+    });
   }
   
   selectTab(heading: string){

@@ -49,8 +49,7 @@
             </tab>
             <tab heading="Photos" #photoTab="tab" (selectTab)="onTabActivated($event)">
                 @if (photoTab.active){
-                <gallery [items]="images" class="gallery">
-                </gallery>
+                <gallery [items]="images" class="gallery"></gallery>
                 }
             </tab>
             <tab heading="Messages" (selectTab)="onTabActivated($event)">
