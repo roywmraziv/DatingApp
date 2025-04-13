@@ -14,9 +14,11 @@ public class UserRepository(DataContext context, IMapper mapper) : IUserReposito
     public async Task<MemberDto?> GetMemberAsync(string username)
     {
         var member = await context.Users
+            .Include(x => x.Photos.AsQueryable().IgnoreQueryFilters())
             .Where(x => x.UserName == username)
             .ProjectTo<MemberDto>(mapper.ConfigurationProvider)
             .SingleOrDefaultAsync();
+        
 
         Console.WriteLine($"Fetched MemberDto: {member}"); // Debugging: Log the fetched MemberDto
         return member;
