@@ -52,8 +52,64 @@ public class AdminController(UserManager<AppUser> userManager) : BaseApiControll
 
     [Authorize(Policy = "ModeratePhotoRole")]
     [HttpGet("photos-to-moderate")]
-    public ActionResult GetPhotosForModeration()
+    public async Task<ActionResult> GetPhotosForModeration()
     {
-        return Ok("Only admins or Moderators can see this");
+        var photos = await userManager.Users
+            .SelectMany(x => x.Photos.Where(p => !p.IsApproved))
+            .ToListAsync();
+
+        return Ok(photos);
+    }
+
+    public async Task<ActionResult> ApprovePhoto(int photoId)
+    {
+        var photo = await userManager.Users
+            .SelectMany(x => x.Photos.Where(p => p.Id == photoId))
+            .FirstOrDefaultAsync();
+
+        var user = await userManager.Users
+            .Include(x => x.Photos)
+            .FirstOrDefaultAsync(x => x.Photos.Any(p => p.Id == photoId));
+
+        if(photo == null) return NotFound("Photo not found");
+        if(user == null) return BadRequest("User not found");
+        if(photo.IsApproved) return BadRequest("Photo already approved");
+
+        photo.IsApproved = true;
+
+        bool hasMainPhoto = user.Photos.Any(x => x.IsMain);
+        if(!hasMainPhoto)
+        {
+            photo.IsMain = true;
+        }
+
+        var result = await userManager.UpdateAsync(user);
+
+        if(!result.Succeeded) return BadRequest("Failed to approve photo");
+
+        return NoContent();
+    }
+
+    public async Task<ActionResult> RejectPhoto(int photoId)
+    {
+        var photo = await userManager.Users
+            .SelectMany(x => x.Photos.Where(p => p.Id == photoId))
+            .FirstOrDefaultAsync();
+
+        if (photo == null) return NotFound("Photo not found");
+
+        var user = await userManager.Users
+            .Include(x => x.Photos)
+            .FirstOrDefaultAsync(x => x.Photos.Any(p => p.Id == photoId));
+
+        if (user == null) return BadRequest("User not found");
+
+        user.Photos.Remove(photo);
+
+        var result = await userManager.UpdateAsync(user);
+
+        if (!result.Succeeded) return BadRequest("Failed to reject photo");
+
+        return NoContent();
     }
 }

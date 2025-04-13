@@ -70,7 +70,8 @@ public class UsersController (IUnitOfWork unitOfWork, IMapper mapper, IPhotoServ
             PublicId = result.PublicId
         };
 
-        if (user.Photos.Count == 0) photo.IsMain = true;
+        // do not automatically set the first photo as main due to new approval logic
+        // if (user.Photos.Count == 0) photo.IsMain = true; 
 
         user.Photos.Add(photo);
 
