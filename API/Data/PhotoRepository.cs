@@ -1,5 +1,6 @@
 using System;
 using API.DTOs;
+using API.Interfaces;
 using API.Models;
 using AutoMapper;
 using AutoMapper.QueryableExtensions;
@@ -7,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace API.Data;
 
-public class PhotoRepository(DataContext context, IMapper mapper)
+public class PhotoRepository(DataContext context, IMapper mapper) : IPhotoRepository
 {
     public async Task<IEnumerable<PhotoForApprovalDto>> GetUnapprovedPhotosAsync()
     {

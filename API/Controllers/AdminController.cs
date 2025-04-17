@@ -56,19 +56,25 @@ public class AdminController(UserManager<AppUser> userManager) : BaseApiControll
     {
         var photos = await userManager.Users
             .SelectMany(x => x.Photos.Where(p => !p.IsApproved))
+            .IgnoreQueryFilters()
             .ToListAsync();
 
         return Ok(photos);
     }
 
+
+    [Authorize(Policy = "RequireAdminRole")]
+    [HttpPost("approve-photo/{photoId}")]
     public async Task<ActionResult> ApprovePhoto(int photoId)
     {
         var photo = await userManager.Users
             .SelectMany(x => x.Photos.Where(p => p.Id == photoId))
+            .IgnoreQueryFilters()
             .FirstOrDefaultAsync();
 
         var user = await userManager.Users
             .Include(x => x.Photos)
+            .IgnoreQueryFilters()
             .FirstOrDefaultAsync(x => x.Photos.Any(p => p.Id == photoId));
 
         if(photo == null) return NotFound("Photo not found");
@@ -90,16 +96,20 @@ public class AdminController(UserManager<AppUser> userManager) : BaseApiControll
         return NoContent();
     }
 
+    [Authorize(Policy = "ModeratePhotoRole")]
+    [HttpPost("reject-photo/{photoId}")]
     public async Task<ActionResult> RejectPhoto(int photoId)
     {
         var photo = await userManager.Users
             .SelectMany(x => x.Photos.Where(p => p.Id == photoId))
+            .IgnoreQueryFilters()
             .FirstOrDefaultAsync();
 
         if (photo == null) return NotFound("Photo not found");
 
         var user = await userManager.Users
             .Include(x => x.Photos)
+            .IgnoreQueryFilters()
             .FirstOrDefaultAsync(x => x.Photos.Any(p => p.Id == photoId));
 
         if (user == null) return BadRequest("User not found");

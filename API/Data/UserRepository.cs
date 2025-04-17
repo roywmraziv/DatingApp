@@ -1,4 +1,5 @@
 using System;
+using System.Security.Claims;
 using API.DTOs;
 using API.Helpers;
 using API.Interfaces;
@@ -9,18 +10,27 @@ using Microsoft.EntityFrameworkCore;
 
 namespace API.Data;
 
-public class UserRepository(DataContext context, IMapper mapper) : IUserRepository
+public class UserRepository(DataContext context, IMapper mapper, IHttpContextAccessor _httpContextAccessor) : IUserRepository
 {
     public async Task<MemberDto?> GetMemberAsync(string username)
     {
-        var member = await context.Users
-            .Include(x => x.Photos.AsQueryable().IgnoreQueryFilters())
+        var currentUserIdString = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        var query = context.Users
+            .Include(x => x.Photos)
+            .AsQueryable();
+
+        if (username == _httpContextAccessor.HttpContext?.User.Identity?.Name)
+        {
+            query = query.Include(x => x.Photos).IgnoreQueryFilters();
+        }
+
+        var member = await query
             .Where(x => x.UserName == username)
             .ProjectTo<MemberDto>(mapper.ConfigurationProvider)
             .SingleOrDefaultAsync();
-        
 
-        Console.WriteLine($"Fetched MemberDto: {member}"); // Debugging: Log the fetched MemberDto
+        Console.WriteLine($"Fetched MemberDto: {member}"); // Debugging
         return member;
     }
 
@@ -64,6 +74,11 @@ public class UserRepository(DataContext context, IMapper mapper) : IUserReposito
     {
         return await context.Users.Include(x => x.Photos).ToListAsync();
     }
+
+    // public async Task<Photo?> GetPhotoByIdAsync(int photoId)
+    // {
+    //     return await context.Photos.IgnoreQueryFilters().FirstOrDefaultAsync(p => p.Id == photoId);
+    // }
 
     // public async Task<bool> SaveAllAsync()
     // {

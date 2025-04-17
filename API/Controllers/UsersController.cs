@@ -13,7 +13,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace API.Controllers;
 
 [Authorize]
-public class UsersController (IUnitOfWork unitOfWork, IMapper mapper, IPhotoService photoService) : BaseApiController
+public class UsersController (IUnitOfWork unitOfWork, IMapper mapper, IPhotoService photoService, IPhotoRepository photoRepository, DataContext context) : BaseApiController
 {
     [HttpGet]
     public async Task<ActionResult<IEnumerable<MemberDto>>> GetUsers([FromQuery]UserParams userParams)
@@ -106,24 +106,22 @@ public class UsersController (IUnitOfWork unitOfWork, IMapper mapper, IPhotoServ
     [HttpDelete("delete-photo/{photoId:int}")]
     public async Task<ActionResult> DeletePhoto(int photoId)
     {
-        var user = await unitOfWork.UserRepository.GetUserByUsernameAsync(User.GetUsername());
+        var photo = await photoRepository.GetPhotoByIdAsync(photoId);
 
-        if(user == null) return BadRequest("User not found");
+        if (photo == null) return NotFound("Photo not found");
 
-        var photo = user.Photos.FirstOrDefault(x => x.Id == photoId);
+        if (photo.IsMain) return BadRequest("You cannot delete your main photo");
 
-        if(photo == null || photo.IsMain) return BadRequest("Photo cannot be deleted");
-
-        if(photo.PublicId != null)
+        if (photo.PublicId != null)
         {
             var result = await photoService.DeletePhotoAsync(photo.PublicId);
 
-            if(result.Error != null) return BadRequest(result.Error.Message);
+            if (result.Error != null) return BadRequest(result.Error.Message);
         }
 
-        user.Photos.Remove(photo);
+        photoRepository.RemovePhoto(photo);
 
-        if(await unitOfWork.Complete()) return Ok();
+        if (await context.SaveChangesAsync() > 0) return Ok();
 
         return BadRequest("Problem deleting photo");
     }
