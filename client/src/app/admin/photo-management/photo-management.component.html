@@ -1,1 +1,12 @@
-<p>photo-management works!</p>
+<div class="d-flex">
+    <div *ngFor="let photo of photos" class="d-flex me-4">
+        <div class="card mb-3">
+            <img [src]="photo.photoUrl" class="card-img-top" alt="Photo" style="max-width: 200px; max-height: 200px;">
+            <h2>Photo ID: {{photo.id}}</h2>
+            <div class="card-body">
+                <button (click)="approvePhoto(photo.id)" class="btn btn-success">Approve</button>
+                <button (click)="rejectPhoto(photo.id)" class="btn btn-danger">Reject</button>
+            </div>
+        </div>
+    </div>
+</div>
