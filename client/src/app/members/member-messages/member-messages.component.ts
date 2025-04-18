@@ -15,13 +15,15 @@ export class MemberMessagesComponent implements AfterViewChecked{
   messageService = inject(MessageService);
   username = input.required<string>();
   messageContent = '';
+  loading = false;
 
   sendMessage(){
+    this.loading = true; // Set loading to true when sending a message
     this.messageService.sendMessage(this.username(), this.messageContent).then(() => {
       this.messageContent = ''; // Clear the message content
       this.messageForm?.resetForm(); // Reset the form properly
       this.scrollToBottom(); // Scroll to the bottom after sending the message
-    });
+    }).finally(() => this.loading = false);
   }  
 
   ngAfterViewChecked(): void {
