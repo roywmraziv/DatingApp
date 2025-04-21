@@ -14,10 +14,17 @@ public static class ApplicationServiceExtensions
     {
         services.AddControllers();
 
+        // services.AddDbContext<DataContext>(opt => 
+        // {
+        //     opt.UseSqlServer(config.GetConnectionString("DefaultConnection"));
+        // });
         services.AddDbContext<DataContext>(opt => 
+{
+    opt.UseSqlServer(config.GetConnectionString("DefaultConnection"), sqlOptions =>
         {
-            opt.UseSqlServer(config.GetConnectionString("DefaultConnection"));
+            sqlOptions.EnableRetryOnFailure();
         });
+    });
         // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
         services.AddOpenApi();
 
